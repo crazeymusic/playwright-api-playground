@@ -29,4 +29,22 @@ test.describe('Restful-Booker /ping', () => {
     const body = await res.text();
     PingResponseSchema.parse(body);
   });
+
+  test('is stable across multiple calls', async ({ request, baseURL }) => {
+    const results: Array<{ status: number; body: string }> = [];
+
+    for (let i = 0; i < 3; i++) {
+      const res = await request.get(`${baseURL}/ping`);
+      const body = await res.text();
+      results.push({ status: res.status(), body });
+    }
+
+    for (const r of results) {
+      expect([200, 201]).toContain(r.status);
+      PingResponseSchema.parse(r.body);
+    }
+
+    const firstBody = results[0].body;
+    expect(results.every((r) => r.body === firstBody)).toBe(true);
+  });
 });
