@@ -32,4 +32,16 @@ test.describe('Restful-Booker /booking/:id contract', () => {
     expect(Number.isNaN(checkoutMs)).toBe(false);
     expect(checkinMs).toBeLessThanOrEqual(checkoutMs);
   });
+
+  test('returns 404 for non-existing booking id', async ({ request, baseURL }) => {
+    const nonExistingId = 99999999;
+    const res = await request.get(`${baseURL}/booking/${nonExistingId}`);
+    expect(res.status()).toBe(404);
+
+    const contentType = (res.headers()['content-type'] ?? '').toLowerCase();
+    expect(contentType).toContain('text');
+
+    const body = await res.text();
+    expect(body.length).toBeGreaterThan(0);
+  });
 });
