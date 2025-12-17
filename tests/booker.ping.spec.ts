@@ -47,4 +47,21 @@ test.describe('Restful-Booker /ping', () => {
     const firstBody = results[0].body;
     expect(results.every((r) => r.body === firstBody)).toBe(true);
   });
+
+  test('does not redirect and does not return HTML', async ({ request, baseURL }) => {
+    const res = await request.get(`${baseURL}/ping`, { maxRedirects: 0 });
+
+    expect([200, 201]).toContain(res.status());
+
+    const headers = res.headers();
+    const location = getHeader(headers, 'location');
+    expect(location).toBe('');
+
+    const contentType = getHeader(headers, 'content-type').toLowerCase();
+    expect(contentType).toContain('text/plain');
+    expect(contentType).not.toContain('text/html');
+
+    const body = await res.text();
+    PingResponseSchema.parse(body);
+  });
 });
