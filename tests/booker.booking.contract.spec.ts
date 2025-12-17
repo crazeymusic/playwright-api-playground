@@ -21,6 +21,8 @@ test.describe('Restful-Booker /booking/:id contract', () => {
     const res = await request.get(`${baseURL}/booking/${bookingId}`);
     expect(res.status()).toBe(200);
 
+    const contentType = (res.headers()['content-type'] ?? '').toLowerCase();
+    expect(contentType).toContain('application/json');
     const json = await res.json();
     const booking = BookingSchema.parse(json);
 
