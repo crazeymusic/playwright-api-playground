@@ -44,4 +44,19 @@ test.describe('Restful-Booker /booking/:id contract', () => {
     const body = await res.text();
     expect(body.length).toBeGreaterThan(0);
   });
+
+  test('includes ETag header for caching/conditional requests', async ({ request, baseURL }) => {
+    const listRes = await request.get(`${baseURL}/booking`);
+    expect(listRes.status()).toBe(200);
+
+    const bookingIds = (await listRes.json()) as Array<{ bookingid: number }>;
+    expect(bookingIds.length).toBeGreaterThan(0);
+
+    const bookingId = bookingIds[0].bookingid;
+    const res = await request.get(`${baseURL}/booking/${bookingId}`);
+    expect(res.status()).toBe(200);
+
+    const etag = res.headers()['etag'] ?? '';
+    expect(etag).not.toBe('');
+  });
 });
