@@ -1,23 +1,32 @@
 import { test, expect } from '@playwright/test';
 import { PingResponseSchema } from '../src/schemas/ping.schema';
 
-test('Restful-Booker /ping responds', async ({ request, baseURL }) => {
-  const res = await request.get(`${baseURL}/ping`);
-  expect([200, 201]).toContain(res.status());
-});
+const MAX_PING_MS = Number(process.env.BOOKER_PING_MAX_MS ?? 1500);
 
-test('Restful-Booker /ping returns quickly and as plain text', async ({ request, baseURL }) => {
-  const startedAt = Date.now();
-  const res = await request.get(`${baseURL}/ping`);
-  const durationMs = Date.now() - startedAt;
+const getHeader = (headers: Record<string, string>, name: string): string => {
+  const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
+  return key ? headers[key] : '';
+};
 
-  expect([200, 201]).toContain(res.status());
+test.describe('Restful-Booker /ping', () => {
+  test('responds with success status', async ({ request, baseURL }) => {
+    const res = await request.get(`${baseURL}/ping`);
+    expect([200, 201]).toContain(res.status());
+  });
 
-  const contentType = res.headers()['content-type'] ?? '';
-  expect(contentType.toLowerCase()).toContain('text/plain');
+  test('returns quickly and as plain text', async ({ request, baseURL }) => {
+    const startedAt = Date.now();
+    const res = await request.get(`${baseURL}/ping`);
+    const durationMs = Date.now() - startedAt;
 
-  const body = await res.text();
-  PingResponseSchema.parse(body);
+    expect([200, 201]).toContain(res.status());
+    expect(durationMs).toBeLessThan(MAX_PING_MS);
 
-  expect(durationMs).toBeLessThan(1500);
+    const headers = res.headers();
+    const contentType = getHeader(headers, 'content-type');
+    expect(contentType.toLowerCase()).toContain('text/plain');
+
+    const body = await res.text();
+    PingResponseSchema.parse(body);
+  });
 });
