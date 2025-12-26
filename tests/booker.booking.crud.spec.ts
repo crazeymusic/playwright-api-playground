@@ -1,14 +1,10 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { AuthSuccessSchema } from '../src/schemas/auth.schema';
+import { requireBaseURL } from '../src/utils/requireBaseURL';
 
 const getHeader = (headers: Record<string, string>, name: string): string => {
   const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
   return key ? headers[key] : '';
-};
-
-const requireBaseURL = (baseURL: string | undefined): string => {
-  if (!baseURL) throw new Error('Missing baseURL. Set use.baseURL in playwright.config.ts (or BOOKER_BASE_URL env).');
-  return baseURL;
 };
 
 const getAuthToken = async (request: APIRequestContext, baseURL: string): Promise<string> => {
@@ -32,7 +28,8 @@ const getAuthToken = async (request: APIRequestContext, baseURL: string): Promis
 
 test.describe('Restful-Booker booking CRUD', () => {
   test('can obtain auth token', async ({ request, baseURL }) => {
-    const token = await getAuthToken(request, requireBaseURL(baseURL));
+    const apiBaseURL = requireBaseURL(baseURL);
+    const token = await getAuthToken(request, apiBaseURL);
     expect(token.length).toBeGreaterThan(0);
   });
 });
