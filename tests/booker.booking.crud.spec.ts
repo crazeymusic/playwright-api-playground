@@ -1,11 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { AuthSuccessSchema } from '../src/schemas/auth.schema';
 import { requireBaseURL } from '../src/utils/requireBaseURL';
-
-const getHeader = (headers: Record<string, string>, name: string): string => {
-  const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
-  return key ? headers[key] : '';
-};
+import { getHeader } from '../src/utils/getHeader';
 
 const getAuthToken = async (request: APIRequestContext, baseURL: string): Promise<string> => {
   const username = process.env.BOOKER_USERNAME ?? 'admin';
