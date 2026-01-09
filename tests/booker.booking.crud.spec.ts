@@ -118,4 +118,20 @@ test.describe('Restful-Booker booking CRUD', () => {
     const verified = BookingSchema.parse(verifyJson);
     expect(verified.additionalneeds).toBe(updatedAdditionalNeeds);
   });
+
+  test('can delete a booking with token and verify 404 via GET', async ({ request, baseURL }) => {
+    const apiBaseURL = requireBaseURL(baseURL);
+
+    const bookingId = await createBooking(request, apiBaseURL);
+    const token = await getAuthToken(request, apiBaseURL);
+
+    const deleteRes = await request.delete(`${apiBaseURL}/booking/${bookingId}`, {
+      headers: { Cookie: `token=${token}` }
+    });
+
+    expect([200, 201]).toContain(deleteRes.status());
+
+    const verifyRes = await request.get(`${apiBaseURL}/booking/${bookingId}`);
+    expect(verifyRes.status()).toBe(404);
+  });
 });
