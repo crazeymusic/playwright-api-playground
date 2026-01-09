@@ -2,10 +2,14 @@ import { test, expect } from '@playwright/test';
 import { AuthBadCredentialsSchema, AuthSuccessSchema } from '../src/schemas/auth.schema';
 import { BookingSchema } from '../src/schemas/booking.schema';
 
+// ==================== HELPERS ====================
+
 const getHeader = (headers: Record<string, string>, name: string): string => {
   const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
   return key ? headers[key] : '';
 };
+
+// ===================== TESTS =====================
 
 test.describe('Restful-Booker /auth', () => {
   test('returns token for valid credentials', async ({ request, baseURL }) => {

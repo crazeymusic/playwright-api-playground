@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { BookingSchema } from '../src/schemas/booking.schema';
 
+// ==================== HELPERS ====================
+
 const parseIsoDate = (value: string): number => {
   // value is already validated as YYYY-MM-DD by Zod, so Date.parse is safe enough here
   return Date.parse(`${value}T00:00:00Z`);
 };
+
+// ===================== TESTS =====================
 
 test.describe('Restful-Booker /booking/:id contract', () => {
   test('returns a booking with expected shape and ISO dates', async ({ request, baseURL }) => {

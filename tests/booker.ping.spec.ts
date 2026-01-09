@@ -1,12 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { PingResponseSchema } from '../src/schemas/ping.schema';
 
+// ==================== HELPERS ====================
+
 const MAX_PING_MS = Number(process.env.BOOKER_PING_MAX_MS ?? 1500);
 
 const getHeader = (headers: Record<string, string>, name: string): string => {
   const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
   return key ? headers[key] : '';
 };
+
+// ===================== TESTS =====================
 
 test.describe('Restful-Booker /ping', () => {
   test('responds with success status', async ({ request, baseURL }) => {
