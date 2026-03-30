@@ -1,13 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures';
 import { AuthBadCredentialsSchema, AuthSuccessSchema } from '../src/schemas/auth.schema';
 import { BookingSchema } from '../src/schemas/booking.schema';
-
-// ==================== HELPERS ====================
-
-const getHeader = (headers: Record<string, string>, name: string): string => {
-  const key = Object.keys(headers).find((h) => h.toLowerCase() === name.toLowerCase());
-  return key ? headers[key] : '';
-};
+import { getHeader } from '../src/utils/getHeader';
 
 // ===================== TESTS =====================
 
@@ -47,18 +41,7 @@ test.describe('Restful-Booker /auth', () => {
     expect(parsed.reason.toLowerCase()).toContain('bad');
   });
 
-  test('token authorizes updating a booking (PUT)', async ({ request, baseURL }) => {
-    const username = process.env.BOOKER_USERNAME ?? 'admin';
-    const password = process.env.BOOKER_PASSWORD ?? 'password123';
-
-    const authRes = await request.post(`${baseURL}/auth`, {
-      data: { username, password },
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' }
-    });
-    expect(authRes.status()).toBe(200);
-    const { token } = (await authRes.json()) as { token: string };
-    expect(token.length).toBeGreaterThan(0);
-
+  test('token authorizes updating a booking (PUT)', async ({ request, baseURL, authToken }) => {
     const listRes = await request.get(`${baseURL}/booking`);
     expect(listRes.status()).toBe(200);
     const bookingIds = (await listRes.json()) as Array<{ bookingid: number }>;
@@ -80,7 +63,7 @@ test.describe('Restful-Booker /auth', () => {
     const updateRes = await request.put(`${baseURL}/booking/${bookingId}`, {
       data: updatedPayload,
       headers: {
-        Cookie: `token=${token}`,
+        Cookie: `token=${authToken}`,
         'Content-Type': 'application/json',
         Accept: 'application/json'
       }

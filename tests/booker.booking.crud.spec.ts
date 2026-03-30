@@ -1,8 +1,8 @@
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect } from './fixtures';
+import type { APIRequestContext } from '@playwright/test';
 import { requireBaseURL } from '../src/utils/requireBaseURL';
 import { getHeader } from '../src/utils/getHeader';
 import { BookingSchema } from '../src/schemas/booking.schema';
-import { AuthSuccessSchema } from '../src/schemas/auth.schema';
 
 // ==================== HELPERS ====================
 
@@ -32,25 +32,6 @@ const createBooking = async (request: APIRequestContext, baseURL: string): Promi
   return json.bookingid;
 };
 
-const getAuthToken = async (request: APIRequestContext, baseURL: string): Promise<string> => {
-  const username = process.env.BOOKER_USERNAME ?? 'admin';
-  const password = process.env.BOOKER_PASSWORD ?? 'password123';
-
-  const res = await request.post(`${baseURL}/auth`, {
-    data: { username, password },
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' }
-  });
-
-  expect(res.status()).toBe(200);
-
-  const contentType = getHeader(res.headers(), 'content-type').toLowerCase();
-  expect(contentType).toContain('application/json');
-
-  const json = await res.json();
-  const parsed = AuthSuccessSchema.parse(json);
-  return parsed.token;
-};
-
 // ===================== TESTS =====================
 
 test.describe('Restful-Booker booking CRUD', () => {
@@ -72,11 +53,10 @@ test.describe('Restful-Booker booking CRUD', () => {
     expect(booking.lastname.length).toBeGreaterThan(0);
   });
 
-  test('can update a booking with token and verify via GET', async ({ request, baseURL }) => {
+  test('can update a booking with token and verify via GET', async ({ request, baseURL, authToken }) => {
     const apiBaseURL = requireBaseURL(baseURL);
 
     const bookingId = await createBooking(request, apiBaseURL);
-    const token = await getAuthToken(request, apiBaseURL);
 
     const currentRes = await request.get(`${apiBaseURL}/booking/${bookingId}`);
     expect(currentRes.status()).toBe(200);
@@ -93,7 +73,7 @@ test.describe('Restful-Booker booking CRUD', () => {
     const updateRes = await request.put(`${apiBaseURL}/booking/${bookingId}`, {
       data: updatedPayload,
       headers: {
-        Cookie: `token=${token}`,
+        Cookie: `token=${authToken}`,
         'Content-Type': 'application/json',
         Accept: 'application/json'
       }
@@ -119,14 +99,13 @@ test.describe('Restful-Booker booking CRUD', () => {
     expect(verified.additionalneeds).toBe(updatedAdditionalNeeds);
   });
 
-  test('can delete a booking with token and verify 404 via GET', async ({ request, baseURL }) => {
+  test('can delete a booking with token and verify 404 via GET', async ({ request, baseURL, authToken }) => {
     const apiBaseURL = requireBaseURL(baseURL);
 
     const bookingId = await createBooking(request, apiBaseURL);
-    const token = await getAuthToken(request, apiBaseURL);
 
     const deleteRes = await request.delete(`${apiBaseURL}/booking/${bookingId}`, {
-      headers: { Cookie: `token=${token}` }
+      headers: { Cookie: `token=${authToken}` }
     });
 
     expect([200, 201]).toContain(deleteRes.status());
